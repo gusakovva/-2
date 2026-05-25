@@ -5,6 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Калькулятор премий</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        window.__BX24_LOADED = false;
+        (function() {
+            var s = document.createElement('script');
+            s.src = '//api.bitrix24.com/api/v1/';
+            s.async = true;
+            s.onload = function() { window.__BX24_LOADED = true; };
+            s.onerror = function() { window.__BX24_LOADED = false; };
+            document.head.appendChild(s);
+        })();
+    </script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -153,16 +164,29 @@
 
             useEffect(() => {
                 if (typeof BX24 !== 'undefined') {
+                    initBx();
+                } else {
+                    var checkCount = 0;
+                    var checkBx = setInterval(function() {
+                        checkCount++;
+                        if (typeof BX24 !== 'undefined') {
+                            clearInterval(checkBx);
+                            initBx();
+                        } else if (checkCount > 25) {
+                            clearInterval(checkBx);
+                            setCurrentUser({ ID: 1, NAME: 'Локальный Тест', LAST_NAME: '' });
+                            setLoading(false);
+                        }
+                    }, 200);
+                }
+                function initBx() {
                     setIsBxMode(true);
-                    BX24.init(() => {
-                        BX24.callMethod('user.current', {}, (res) => {
+                    BX24.init(function() {
+                        BX24.callMethod('user.current', {}, function(res) {
                             if (!res.error()) setCurrentUser(res.data());
                             setLoading(false);
                         });
                     });
-                } else {
-                    setCurrentUser({ ID: 1, NAME: 'Локальный Тест', LAST_NAME: '' });
-                    setLoading(false);
                 }
             }, []);
 
